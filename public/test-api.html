@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test API - E-commerce Backend</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>🛒 Test API - E-commerce Backend</h1>
+
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <h3>Estado del Servidor</h3>
+            <p>
+                <span class="status-indicator" id="statusIndicator"></span>
+                <span id="statusText">Verificando...</span>
+            </p>
+            <p id="serverUrl" style="margin-top: 10px; color: #666; font-size: 14px;"></p>
+        </div>
+
+        <!-- Info Box -->
+        <div class="info-box">
+            <h3>📋 Usuarios de Prueba (después de ejecutar seed)</h3>
+            <ul>
+                <li><strong>Admin:</strong> admin@ecommerce.com / admin123</li>
+                <li><strong>Usuario:</strong> juan@example.com / user123</li>
+            </ul>
+        </div>
+
+        <!-- Token Display -->
+        <div class="card" id="tokenCard" style="display: none;">
+            <h2>🔑 Token JWT Actual</h2>
+            <div class="token-display" id="tokenDisplay">No hay token</div>
+            <button class="btn-secondary" onclick="clearToken()">Limpiar Token</button>
+        </div>
+
+        <div class="grid">
+            <!-- Health Check -->
+            <div class="card">
+                <h2>✅ Health Check</h2>
+                <button onclick="healthCheck()">Verificar Servidor</button>
+                <div id="healthResponse" class="response" style="display: none;"></div>
+            </div>
+
+            <!-- Register -->
+            <div class="card">
+                <h2>📝 Registrar Usuario</h2>
+                <div class="form-group">
+                    <label>Nombre</label>
+                    <input type="text" id="regFirstName" value="Test" placeholder="Juan">
+                </div>
+                <div class="form-group">
+                    <label>Apellido</label>
+                    <input type="text" id="regLastName" value="User" placeholder="Pérez">
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="regEmail" value="test@example.com" placeholder="test@example.com">
+                </div>
+                <div class="form-group">
+                    <label>Edad</label>
+                    <input type="number" id="regAge" value="25" placeholder="25">
+                </div>
+                <div class="form-group">
+                    <label>Contraseña</label>
+                    <input type="password" id="regPassword" value="test123" placeholder="password123">
+                </div>
+                <div class="form-group">
+                    <label>Rol</label>
+                    <select id="regRole">
+                        <option value="user">User</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+                <button onclick="register()">Registrar</button>
+                <div id="registerResponse" class="response" style="display: none;"></div>
+            </div>
+
+            <!-- Login -->
+            <div class="card">
+                <h2>🔐 Login</h2>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="loginEmail" value="admin@ecommerce.com" placeholder="admin@ecommerce.com">
+                </div>
+                <div class="form-group">
+                    <label>Contraseña</label>
+                    <input type="password" id="loginPassword" value="admin123" placeholder="admin123">
+                </div>
+                <button onclick="login()">Iniciar Sesión</button>
+                <div id="loginResponse" class="response" style="display: none;"></div>
+            </div>
+
+            <!-- Current User -->
+            <div class="card">
+                <h2>👤 Usuario Actual (Current)</h2>
+                <p style="margin-bottom: 15px; color: #666; font-size: 14px;">
+                    Requiere token JWT. Haz login primero.
+                </p>
+                <button onclick="getCurrentUser()">Obtener Usuario Actual</button>
+                <div id="currentResponse" class="response" style="display: none;"></div>
+            </div>
+
+            <!-- Get All Users -->
+            <div class="card">
+                <h2>👥 Listar Usuarios (Admin)</h2>
+                <p style="margin-bottom: 15px; color: #666; font-size: 14px;">
+                    Requiere token JWT de administrador.
+                </p>
+                <button onclick="getAllUsers()">Listar Todos</button>
+                <div id="usersResponse" class="response" style="display: none;"></div>
+            </div>
+
+            <!-- Logout -->
+            <div class="card">
+                <h2>🚪 Logout</h2>
+                <button onclick="logout()">Cerrar Sesión</button>
+                <div id="logoutResponse" class="response" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8080';
+        let currentToken = '';
+
+        window.onload = function() {
+            healthCheck();
+            loadToken();
+        };
+
+        function saveToken(token) {
+            currentToken = token;
+            localStorage.setItem('jwt_token', token);
+            updateTokenDisplay();
+        }
+
+        function loadToken() {
+            const token = localStorage.getItem('jwt_token');
+            if (token) {
+                currentToken = token;
+                updateTokenDisplay();
+            }
+        }
+
+        function clearToken() {
+            currentToken = '';
+            localStorage.removeItem('jwt_token');
+            updateTokenDisplay();
+            showResponse('tokenCard', 'Token eliminado', 'success');
+        }
+
+        function updateTokenDisplay() {
+            const tokenCard = document.getElementById('tokenCard');
+            const tokenDisplay = document.getElementById('tokenDisplay');
+            
+            if (currentToken) {
+                tokenCard.style.display = 'block';
+                tokenDisplay.textContent = currentToken;
+            } else {
+                tokenCard.style.display = 'none';
+                tokenDisplay.textContent = 'No hay token';
+            }
+        }
+
+        function showResponse(elementId, data, type = 'success') {
+            const element = document.getElementById(elementId);
+            element.style.display = 'block';
+            element.className = `response ${type}`;
+            element.textContent = typeof data === 'object' ? JSON.stringify(data, null, 2) : data;
+        }
+
+        async function healthCheck() {
+            try {
+                const response = await fetch(`${API_URL}/api/health`);
+                const data = await response.json();
+                
+                showResponse('healthResponse', data, 'success');
+                
+                // Actualizar status bar
+                document.getElementById('statusIndicator').className = 'status-indicator status-online';
+                document.getElementById('statusText').textContent = '✅ Servidor Online';
+                document.getElementById('serverUrl').textContent = `Conectado a: ${API_URL}`;
+            } catch (error) {
+                showResponse('healthResponse', `Error: ${error.message}`, 'error');
+                
+                // Actualizar status bar
+                document.getElementById('statusIndicator').className = 'status-indicator status-offline';
+                document.getElementById('statusText').textContent = '❌ Servidor Offline';
+                document.getElementById('serverUrl').textContent = `No se puede conectar a: ${API_URL}`;
+            }
+        }
+
+        async function register() {
+            const data = {
+                first_name: document.getElementById('regFirstName').value,
+                last_name: document.getElementById('regLastName').value,
+                email: document.getElementById('regEmail').value,
+                age: parseInt(document.getElementById('regAge').value),
+                password: document.getElementById('regPassword').value,
+                role: document.getElementById('regRole').value
+            };
+
+            try {
+                const response = await fetch(`${API_URL}/api/sessions/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+                showResponse('registerResponse', result, response.ok ? 'success' : 'error');
+            } catch (error) {
+                showResponse('registerResponse', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function login() {
+            const data = {
+                email: document.getElementById('loginEmail').value,
+                password: document.getElementById('loginPassword').value
+            };
+
+            try {
+                const response = await fetch(`${API_URL}/api/sessions/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+                
+                if (response.ok && result.data && result.data.token) {
+                    saveToken(result.data.token);
+                }
+                
+                showResponse('loginResponse', result, response.ok ? 'success' : 'error');
+            } catch (error) {
+                showResponse('loginResponse', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function getCurrentUser() {
+            if (!currentToken) {
+                showResponse('currentResponse', 'Error: Debes hacer login primero para obtener el token JWT', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/api/sessions/current`, {
+                    headers: {
+                        'Authorization': `Bearer ${currentToken}`
+                    }
+                });
+
+                const result = await response.json();
+                showResponse('currentResponse', result, response.ok ? 'success' : 'error');
+            } catch (error) {
+                showResponse('currentResponse', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function getAllUsers() {
+            if (!currentToken) {
+                showResponse('usersResponse', 'Error: Debes hacer login primero para obtener el token JWT', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/api/users`, {
+                    headers: {
+                        'Authorization': `Bearer ${currentToken}`
+                    }
+                });
+
+                const result = await response.json();
+                showResponse('usersResponse', result, response.ok ? 'success' : 'error');
+            } catch (error) {
+                showResponse('usersResponse', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function logout() {
+            try {
+                const response = await fetch(`${API_URL}/api/sessions/logout`, {
+                    method: 'POST'
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    clearToken();
+                }
+                
+                showResponse('logoutResponse', result, response.ok ? 'success' : 'error');
+            } catch (error) {
+                showResponse('logoutResponse', `Error: ${error.message}`, 'error');
+            }
+        }
+    </script>
+</body>
+</html>

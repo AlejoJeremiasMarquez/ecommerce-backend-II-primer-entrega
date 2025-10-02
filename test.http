@@ -1,0 +1,195 @@
+### Variables
+@baseUrl = http://localhost:8080
+@token = tu-token-aqui
+
+### Health Check
+GET {{baseUrl}}/api/health
+
+###
+### ============================================
+### AUTENTICACIÓN - /api/sessions
+### ============================================
+###
+
+### 1. Registrar nuevo usuario
+POST {{baseUrl}}/api/sessions/register
+Content-Type: application/json
+
+{
+  "first_name": "Test",
+  "last_name": "Usuario",
+  "email": "test@example.com",
+  "age": 25,
+  "password": "test123",
+  "role": "user"
+}
+
+### 2. Registrar usuario administrador
+POST {{baseUrl}}/api/sessions/register
+Content-Type: application/json
+
+{
+  "first_name": "Admin",
+  "last_name": "Test",
+  "email": "admin@test.com",
+  "age": 30,
+  "password": "admin123",
+  "role": "admin"
+}
+
+### 3. Login de usuario
+POST {{baseUrl}}/api/sessions/login
+Content-Type: application/json
+
+{
+  "email": "admin@test.com",
+  "password": "admin123"
+}
+
+### 4. Login con credenciales incorrectas (debe fallar)
+POST {{baseUrl}}/api/sessions/login
+Content-Type: application/json
+
+{
+  "email": "admin@test.com",
+  "password": "wrongpassword"
+}
+
+### 5. Obtener usuario actual (CURRENT) - Requiere token
+GET {{baseUrl}}/api/sessions/current
+Authorization: Bearer {{token}}
+
+### 6. Obtener usuario actual sin token (debe fallar)
+GET {{baseUrl}}/api/sessions/current
+
+### 7. Logout
+POST {{baseUrl}}/api/sessions/logout
+
+###
+### ============================================
+### CRUD DE USUARIOS - /api/users
+### ============================================
+###
+
+### 1. Obtener todos los usuarios (solo admin)
+GET {{baseUrl}}/api/users
+Authorization: Bearer {{token}}
+
+### 2. Obtener usuario por ID
+GET {{baseUrl}}/api/users/REEMPLAZAR_CON_ID
+Authorization: Bearer {{token}}
+
+### 3. Actualizar usuario
+PUT {{baseUrl}}/api/users/REEMPLAZAR_CON_ID
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "first_name": "Nombre Actualizado",
+  "age": 26
+}
+
+### 4. Actualizar contraseña de usuario
+PUT {{baseUrl}}/api/users/REEMPLAZAR_CON_ID
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "password": "nuevaPassword123"
+}
+
+### 5. Eliminar usuario (solo admin)
+DELETE {{baseUrl}}/api/users/REEMPLAZAR_CON_ID
+Authorization: Bearer {{token}}
+
+###
+### ============================================
+### CASOS DE ERROR
+### ============================================
+###
+
+### Error: Email duplicado
+POST {{baseUrl}}/api/sessions/register
+Content-Type: application/json
+
+{
+  "first_name": "Test",
+  "last_name": "Usuario",
+  "email": "admin@test.com",
+  "age": 25,
+  "password": "test123"
+}
+
+### Error: Token inválido
+GET {{baseUrl}}/api/sessions/current
+Authorization: Bearer token_invalido_12345
+
+### Error: Usuario sin permisos de admin
+GET {{baseUrl}}/api/users
+Authorization: Bearer {{token}}
+
+### Error: Campos requeridos faltantes
+POST {{baseUrl}}/api/sessions/register
+Content-Type: application/json
+
+{
+  "email": "incomplete@test.com",
+  "password": "test123"
+}
+
+### Error: Edad menor a 18
+POST {{baseUrl}}/api/sessions/register
+Content-Type: application/json
+
+{
+  "first_name": "Menor",
+  "last_name": "DeEdad",
+  "email": "menor@test.com",
+  "age": 16,
+  "password": "test123"
+}
+
+###
+### ============================================
+### FLUJO COMPLETO DE PRUEBA
+### ============================================
+###
+
+### PASO 1: Registrar usuario
+POST {{baseUrl}}/api/sessions/register
+Content-Type: application/json
+
+{
+  "first_name": "Flujo",
+  "last_name": "Completo",
+  "email": "flujo@test.com",
+  "age": 27,
+  "password": "flujo123",
+  "role": "user"
+}
+
+### PASO 2: Hacer login (copiar el token de la respuesta)
+POST {{baseUrl}}/api/sessions/login
+Content-Type: application/json
+
+{
+  "email": "flujo@test.com",
+  "password": "flujo123"
+}
+
+### PASO 3: Verificar usuario actual con el token
+GET {{baseUrl}}/api/sessions/current
+Authorization: Bearer {{token}}
+
+### PASO 4: Actualizar datos del usuario
+PUT {{baseUrl}}/api/users/REEMPLAZAR_CON_ID
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "first_name": "Flujo Actualizado",
+  "age": 28
+}
+
+### PASO 5: Logout
+POST {{baseUrl}}/api/sessions/logout
