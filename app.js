@@ -5,8 +5,9 @@ import dotenv from 'dotenv';
 import passport from './config/passport.config.js';
 import sessionsRoutes from './routes/sessions.routes.js';
 import usersRoutes from './routes/users.routes.js';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import productsRoutes from './routes/products.routes.js';
+import cartsRouter from './routes/carts.routes.js';
+import ticketsRouter from './routes/tickets.routes.js';
 import { passportErrorHandler, globalErrorHandler } from './middlewares/error.middleware.js';
 
 // Cargar variables de entorno
@@ -16,24 +17,13 @@ const app = express();
 const PORT = process.env.PORT || 8080;
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/ecommerce';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-
-// ========================================
-// CONFIGURACIÓN DE LA APLICACIÓN
-// ========================================
-app.use(express.static(path.join(__dirname, 'public')));
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'test-api.html'));
-});
-
 // ========================================
 // MIDDLEWARES
 // ========================================
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use(express.static('public')); // Agregar esta línea
 
 // Inicializar Passport
 app.use(passport.initialize());
@@ -41,8 +31,16 @@ app.use(passport.initialize());
 // ========================================
 // RUTAS
 // ========================================
+// Ruta raíz que sirve el index.html
+app.get('/', (req, res) => {
+  res.sendFile('index.html', { root: './public' });
+});
+
 app.use('/api/sessions', sessionsRoutes);
 app.use('/api/users', usersRoutes);
+app.use('/api/products', productsRoutes);
+app.use('/api/carts', cartsRouter);
+app.use('/api/tickets', ticketsRouter);
 
 // Ruta de prueba
 app.get('/api/health', (req, res) => {
@@ -59,7 +57,7 @@ app.get('/api/health', (req, res) => {
 app.use(passportErrorHandler);
 app.use(globalErrorHandler);
 
-// Ruta no encontrada (SIN el asterisco)
+// Ruta no encontrada
 app.use((req, res) => {
   res.status(404).json({
     status: 'error',

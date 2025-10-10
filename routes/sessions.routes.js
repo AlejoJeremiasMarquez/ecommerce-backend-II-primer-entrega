@@ -8,38 +8,48 @@ const router = Router();
 // RUTA DE REGISTRO
 // ========================================
 router.post('/register', 
-passport.authenticate('register', { 
+  passport.authenticate('register', { 
     session: false,
     failWithError: true 
-}),
-sessionsController.register
+  }),
+  sessionsController.register
 );
 
 // ========================================
 // RUTA DE LOGIN
 // ========================================
 router.post('/login',
-passport.authenticate('login', { 
+  passport.authenticate('login', { 
     session: false,
     failWithError: true 
-}),
-sessionsController.login
+  }),
+  sessionsController.login
 );
 
 // ========================================
 // RUTA CURRENT (Usuario actual)
 // ========================================
 router.get('/current',
-passport.authenticate('current', { 
+  passport.authenticate('current', { 
     session: false,
     failWithError: true 
-}),
-sessionsController.current
+  }),
+  sessionsController.current
 );
 
 // ========================================
 // RUTA DE LOGOUT
 // ========================================
 router.post('/logout', sessionsController.logout);
+
+// ========================================
+// RUTAS DE RECUPERACIÓN DE CONTRASEÑA
+// ========================================
+
+// Solicitar recuperación de contraseña
+router.post('/forgot-password', sessionsController.forgotPassword);
+
+// Restablecer contraseña con token
+router.post('/reset-password/:token', sessionsController.resetPassword);
 
 export default router;
