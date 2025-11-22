@@ -9,6 +9,8 @@ import productsRoutes from './routes/products.routes.js';
 import cartsRouter from './routes/carts.routes.js';
 import ticketsRouter from './routes/tickets.routes.js';
 import { passportErrorHandler, globalErrorHandler } from './middlewares/error.middleware.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 // Cargar variables de entorno
 dotenv.config();
@@ -16,6 +18,8 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 8080;
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/ecommerce';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // ========================================
 // MIDDLEWARES
@@ -23,7 +27,7 @@ const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/ecomme
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-app.use(express.static('public')); // Agregar esta línea
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Inicializar Passport
 app.use(passport.initialize());

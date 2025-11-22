@@ -46,3 +46,32 @@ Sistema completo de e-commerce con arquitectura profesional, implementando patro
 ecommerce-backend/
 ├── app.js                          # Aplicación principal
 ├── package.json
+```
+
+## 🚀 Instrucciones para Docker
+
+### Construir la imagen de Docker
+
+```bash
+docker build -t alejojeremiasmarquez/ecommerce-backend:latest .
+```
+
+### Ejecutar el contenedor
+
+```bash
+docker run -d -p 8080:8080 --name ecommerce-backend alejojeremiasmarquez/ecommerce-backend:latest
+```
+
+### Subir la imagen a Docker Hub
+
+```bash
+docker login
+docker push alejojeremiasmarquez/ecommerce-backend:latest
+```
+
+### Probar la API
+
+```bash
+curl http://localhost:8080/api/health
+```
+````
